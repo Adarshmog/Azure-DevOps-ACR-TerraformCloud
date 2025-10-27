@@ -1,0 +1,63 @@
+trigger:
+  branches:
+    include:
+      - none 
+
+pool:
+  name: 'adarsh'
+
+variables:
+- group: tfcloud
+- name: TF_WORKING_DIR
+  value: '.'
+
+stages:
+  - stage: Infra
+    displayName: "Provision AKS Infrastructure"
+    jobs:
+      - job: TerraformJob
+        displayName: "Terraform Apply"
+        steps:
+          - checkout: self
+
+          # Step 1: Install Terraform
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: '1.7.5'
+
+          # Step 2: Terraform Init with Cloud Backend
+          - task: Bash@3
+            displayName: 'Terraform Init (Terraform Cloud)'
+            inputs:
+              targetType: 'inline'
+              workingDirectory: '$(TF_WORKING_DIR)'
+              script: |
+                echo "Initializing Terraform with remote backend......"
+                terraform init -input=false
+            env:
+              TF_TOKEN_app_terraform_io: $(TF_TOKEN_app_terraform_io)
+
+          # Step 3: Terraform Plan
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Plan'
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: '$(TF_WORKING_DIR)'
+              environmentServiceNameAzureRM: 'AzureARM'
+            env:
+              TF_TOKEN_app_terraform_io: $(TF_TOKEN_app_terraform_io)
+
+          # Step 4: Terraform Apply
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Apply'
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              workingDirectory: '$(TF_WORKING_DIR)'
+              environmentServiceNameAzureRM: 'AzureARM'
+              commandOptions: '-auto-approve'
+            env:
+              TF_TOKEN_app_terraform_io: $(TF_TOKEN_app_terraform_io)
+
