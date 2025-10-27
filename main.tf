@@ -27,7 +27,6 @@ data "azurerm_resource_group" "acr_rg" {
 module "container_registry" {
   source = "./modules/container_registry"
   resource_group_name = data.azurerm_resource_group.acr_rg.name
-  location            = data.azurerm_resource_group.acr_rg.location
   container_registry_name = var.container_registry_name
   georeplication_location = var.georeplication_location
 
