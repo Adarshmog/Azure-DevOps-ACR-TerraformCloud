@@ -13,9 +13,5 @@ variable "georeplication_location" {
   type        = string
 }
 
-variable "location" {
-  description = "Resource Group location"
-  type        = string
-}
 
 
